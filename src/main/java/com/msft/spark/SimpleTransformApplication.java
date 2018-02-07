@@ -75,6 +75,7 @@ public class SimpleTransformApplication {
                 .format("kafka")
                 .option("kafka.bootstrap.servers", args[0])
                 .option("topic", args[2])
+                .option("checkpointLocation", "/tmp")
                 .start();
 
         //sample downstream processing with a count
