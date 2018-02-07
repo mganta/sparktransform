@@ -4,11 +4,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.ForeachWriter;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
-import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.sql.Encoders;
+
+import java.io.IOException;
 
 public class SimpleTransformApplication {
     public static void main(String[] args) throws StreamingQueryException {
@@ -44,10 +46,28 @@ public class SimpleTransformApplication {
                 .as(Encoders.STRING());
 
         //apply transformation
-        ds1.foreach((ForeachFunction<String>) fileName -> {
-            System.out.println(fileName);
-            TransformFunction.transform(fileName);
-        });
+        //need exception handling here
+        ds1.writeStream().foreach(new ForeachWriter<String>() {
+            @Override
+            public boolean open(long partitionId, long version) {
+                return true;
+            }
+
+            @Override
+            public void process(String fileName)  {
+                System.out.println(fileName);
+                try {
+                    TransformFunction.transform(fileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void close(Throwable errorOrNull) {
+            }
+        }).start();
 
         //dataset to kafka
         ds1.selectExpr("CAST(current_timestamp() AS STRING) AS key", "CAST(value AS STRING) AS value")
