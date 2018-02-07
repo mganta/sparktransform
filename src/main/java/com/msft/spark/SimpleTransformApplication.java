@@ -38,8 +38,8 @@ public class SimpleTransformApplication {
         Dataset<String> ds1 = sparkSession
                 .readStream()
                 .format("kafka")
-                .option("kafka.bootstrap.servers", args[1])
-                .option("subscribe", args[2])
+                .option("kafka.bootstrap.servers", args[0])
+                .option("subscribe", args[1])
                 .option("startingOffsets", "latest")
                 .load()
                 .selectExpr("CAST(value AS STRING) AS value")
@@ -73,8 +73,8 @@ public class SimpleTransformApplication {
         ds1.selectExpr("CAST(current_timestamp() AS STRING) AS key", "CAST(value AS STRING) AS value")
                 .writeStream()
                 .format("kafka")
-                .option("kafka.bootstrap.servers", args[1])
-                .option("topic", args[3])
+                .option("kafka.bootstrap.servers", args[0])
+                .option("topic", args[2])
                 .start();
 
         //sample downstream processing with a count
